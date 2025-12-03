@@ -1,0 +1,637 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <title>Print Color Lab — CMYK</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+        }
+
+        body {
+            background: #020617;
+            color: #e5e7eb;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .page {
+            max-width: 1080px;
+            width: 100%;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .column {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .card-frame {
+            background: radial-gradient(circle at top, rgba(148, 163, 184, 0.12), transparent 60%);
+            border-radius: 26px;
+            padding: 1px;
+        }
+
+        .panel {
+            background: #020617;
+            border-radius: 20px;
+            padding: 18px 20px;
+            box-shadow: 0 0 0 1px #0b1120, 0 18px 45px rgba(15, 23, 42, 0.9);
+            margin-bottom: 18px;
+        }
+
+        .panel-title {
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .headline {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .lead {
+            font-size: 13px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .slider-row {
+            margin-bottom: 10px;
+        }
+
+        .slider-label {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+            .slider-label span.main {
+                min-width: 16px;
+                font-weight: 600;
+                text-transform: uppercase;
+            }
+
+            .slider-label span.sub {
+                font-size: 11px;
+                color: #6b7280;
+            }
+
+        .slider-line {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 999px;
+            background: #020617;
+            box-shadow: inset 0 0 0 1px #1f2937;
+        }
+
+            input[type="range"]::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 14px;
+                height: 14px;
+                border-radius: 999px;
+                background: #f9fafb;
+                border: 2px solid #4b5563;
+                box-shadow: 0 0 0 1px #020617, 0 6px 14px rgba(15, 23, 42, 0.7);
+                cursor: pointer;
+                margin-top: -5px;
+            }
+
+            input[type="range"]::-moz-range-thumb {
+                width: 14px;
+                height: 14px;
+                border-radius: 999px;
+                background: #f9fafb;
+                border: 2px solid #4b5563;
+                cursor: pointer;
+            }
+
+            input[type="range"]::-moz-range-track {
+                height: 4px;
+                border-radius: 999px;
+                background: #111827;
+            }
+
+        .slider-value {
+            width: 38px;
+            text-align: right;
+            font-size: 12px;
+            padding: 4px;
+            border-radius: 999px;
+            background: #020617;
+            box-shadow: inset 0 0 0 1px #111827;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .swatch-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 640px) {
+            .swatch-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .swatch-card {
+            background: #020617;
+            border-radius: 18px;
+            padding: 12px 14px;
+            box-shadow: 0 0 0 1px #0b1120;
+        }
+
+        .swatch-label {
+            font-size: 11px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+
+        .swatch-box {
+            width: 100%;
+            height: 86px;
+            border-radius: 12px;
+            background: #111827;
+            margin-bottom: 10px;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.8), 0 12px 30px rgba(15, 23, 42, 0.9);
+        }
+
+        .swatch-text-main {
+            font-size: 13px;
+            font-variant-numeric: tabular-nums;
+            margin-bottom: 4px;
+        }
+
+        .swatch-text-sub {
+            font-size: 12px;
+            color: #9ca3af;
+        }
+
+        .tiny {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 6px;
+        }
+
+        .disclaimer {
+            margin-top: 14px;
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+
+        .cup-card {
+            background: #020617;
+            border-radius: 20px;
+            padding: 16px 16px 14px;
+            box-shadow: 0 0 0 1px #0b1120;
+        }
+
+        .cup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .cup-title {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .cup-badge {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(55, 65, 81, 0.8);
+            color: #e5e7eb;
+        }
+
+        .cup-rect {
+            width: 100%;
+            height: 120px;
+            border-radius: 18px;
+            background: #111827;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.75), 0 16px 40px rgba(15, 23, 42, 0.9);
+            margin-bottom: 12px;
+        }
+
+        .cup-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .cup-pill {
+            width: 56px;
+            height: 18px;
+            border-radius: 999px;
+            background: #111827;
+            box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.85), 0 8px 18px rgba(15, 23, 42, 0.9);
+        }
+
+        .cup-tag {
+            font-size: 11px;
+            padding: 4px 9px;
+            border-radius: 999px;
+            background: #f9fafb;
+            color: #111827;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        .disc-secondary {
+            font-size: 12px;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+
+        .layout-top {
+            margin-bottom: 18px;
+        }
+
+        .panel-small {
+            background: #020617;
+            border-radius: 18px;
+            padding: 14px 16px;
+            box-shadow: 0 0 0 1px #0b1120;
+            font-size: 12px;
+            color: #9ca3af;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="panel layout-top">
+            <div class="panel-title">Print Color Lab</div>
+            <div class="headline">Экранная визуализация CMYK</div>
+            <div class="lead">
+                Экспериментальный просмотрщик, который старается показать на экране
+                максимально близкий к печати результат по CMYK-профилю.
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="column">
+                <div class="panel">
+                    <div class="panel-title">Ползунки CMYK</div>
+
+                    <div class="slider-row">
+                        <div class="slider-label">
+                            <span class="main">C</span>
+                            <span class="sub">cyan</span>
+                        </div>
+                        <div class="slider-line">
+                            <input type="range" id="cSlider" min="0" max="100" value="100" />
+                            <div class="slider-value" id="cVal">100</div>
+                        </div>
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-label">
+                            <span class="main">M</span>
+                            <span class="sub">magenta</span>
+                        </div>
+                        <div class="slider-line">
+                            <input type="range" id="mSlider" min="0" max="100" value="0" />
+                            <div class="slider-value" id="mVal">0</div>
+                        </div>
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-label">
+                            <span class="main">Y</span>
+                            <span class="sub">yellow</span>
+                        </div>
+                        <div class="slider-line">
+                            <input type="range" id="ySlider" min="0" max="100" value="0" />
+                            <div class="slider-value" id="yVal">0</div>
+                        </div>
+                    </div>
+
+                    <div class="slider-row">
+                        <div class="slider-label">
+                            <span class="main">K</span>
+                            <span class="sub">black</span>
+                        </div>
+                        <div class="slider-line">
+                            <input type="range" id="kSlider" min="0" max="100" value="0" />
+                            <div class="slider-value" id="kVal">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column">
+                <div class="panel">
+                    <div class="swatch-grid">
+                        <div class="swatch-card">
+                            <div class="swatch-label">CMYK (печать)</div>
+                            <div class="swatch-box" id="cmykSwatch"></div>
+                            <div class="swatch-text-main" id="cmykText">C 100 / M 0 / Y 0 / K 0</div>
+                            <div class="tiny" id="tacText">Общее покрытие: 100%</div>
+                        </div>
+
+                        <div class="swatch-card">
+                            <div class="swatch-label">HEX (экран)</div>
+                            <div class="swatch-box" id="hexSwatch"></div>
+                            <div class="swatch-text-main" id="hexText">#3CB2E6</div>
+
+                        </div>
+                    </div>
+
+                    <div class="disclaimer">
+                        Важно: даже с ICC-профилем это только экранная имитация. На результат
+                        влияют калибровка монитора, освещение, конкретная бумага и машина.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем ICC-движок -->
+    <script src="jsColorEngineWeb.js"></script>
+    <script>
+        // Примарии печатного процесса, измерённые по эталонным патчам C100, M100, Y100, K100.
+        const PRIMARIES = {
+            C: "#3CB2E6", // Cyan
+            M: "#E6288F", // Magenta
+            Y: "#F1E32B", // Yellow
+            K: "#626261", // Black
+        };
+
+        function hexToRgb(hex) {
+            const clean = hex.replace("#", "");
+            const bigint = parseInt(clean, 16);
+            const r = (bigint >> 16) & 255;
+            const g = (bigint >> 8) & 255;
+            const b = bigint & 255;
+            return { r, g, b };
+        }
+
+        function rgbToHex(r, g, b) {
+            const toHex = (v) => v.toString(16).padStart(2, "0").toUpperCase();
+            return "#" + toHex(r) + toHex(g) + toHex(b);
+        }
+        function applyPsBrightness(rgb, psBrightness) {
+            // psBrightness — значение как в Photoshop: от -150 до +150
+            // -13 означает лёгкое затемнение
+            var maxSlider = 150; // диапазон слайдера в Photoshop
+            var delta = psBrightness / maxSlider * 255; // переводим «деления» в уровни 0–255
+
+            var r = rgb.r + delta;
+            var g = rgb.g + delta;
+            var b = rgb.b + delta;
+
+            // жёстко ограничиваем диапазон 0–255
+            if (r < 0) r = 0;
+            if (r > 255) r = 255;
+            if (g < 0) g = 0;
+            if (g > 255) g = 255;
+            if (b < 0) b = 0;
+            if (b > 255) b = 255;
+
+            return {
+                r: Math.round(r),
+                g: Math.round(g),
+                b: Math.round(b)
+            };
+        }
+
+        // Fallback-модель: симуляция печати по измеренным примариям без ICC.
+        function cmykToRgbProfiled(c, m, y, k, primaries) {
+            const inks = {
+                C: hexToRgb(primaries.C),
+                M: hexToRgb(primaries.M),
+                Y: hexToRgb(primaries.Y),
+                K: hexToRgb(primaries.K),
+            };
+
+            let rf = 1.0;
+            let gf = 1.0;
+            let bf = 1.0;
+
+            const applyInk = (value, key) => {
+                const t = value / 100;
+                const ink = inks[key];
+                const ir = ink.r / 255;
+                const ig = ink.g / 255;
+                const ib = ink.b / 255;
+
+                rf *= 1 - t + t * ir;
+                gf *= 1 - t + t * ig;
+                bf *= 1 - t + t * ib;
+            };
+
+            applyInk(c, "C");
+            applyInk(m, "M");
+            applyInk(y, "Y");
+            applyInk(k, "K");
+
+            const r = Math.round(255 * rf);
+            const g = Math.round(255 * gf);
+            const b = Math.round(255 * bf);
+
+            return { r, g, b };
+        }
+
+        // --- ICC-движок jsColorEngine ---
+
+        let cmykToRgbTransform = null;
+        let iccReady = false;
+
+        function cmykToRgbEngine(c, m, y, k) {
+            // Если ICC-профиль успешно инициализирован — используем его.
+            if (iccReady && cmykToRgbTransform) {
+                const cNorm = c / 100;
+                const mNorm = m / 100;
+                const yNorm = y / 100;
+                const kNorm = k / 100;
+
+                try {
+                    const out = cmykToRgbTransform.transform([cNorm, mNorm, yNorm, kNorm]);
+                    let r, g, b;
+
+                    if (Array.isArray(out)) {
+                        [r, g, b] = out;
+                    } else if (out && typeof out === "object") {
+                        r = out.R;
+                        g = out.G;
+                        b = out.B;
+                    }
+
+                    if (typeof r === "number" && typeof g === "number" && typeof b === "number") {
+                        // jsColorEngine обычно отдаёт 0–1, но подстрахуемся.
+                        if (r <= 1 && g <= 1 && b <= 1) {
+                            r *= 255;
+                            g *= 255;
+                            b *= 255;
+                        }
+
+                        return {
+                            r: Math.round(Math.min(255, Math.max(0, r))),
+                            g: Math.round(Math.min(255, Math.max(0, g))),
+                            b: Math.round(Math.min(255, Math.max(0, b))),
+                        };
+                    }
+                } catch (e) {
+                    console.error("Ошибка ICC-конвертации CMYK→RGB:", e);
+                }
+            }
+
+            // Если ICC нет или он отвалился — честный fallback на модель примариев.
+            return cmykToRgbProfiled(c, m, y, k, PRIMARIES);
+        }
+
+        async function initICC() {
+            const profileText = document.getElementById("profileText");
+
+            if (!window.jsColorEngine) {
+                profileText.textContent = "ICC-движок не найден (jsColorEngineWeb.js). Используется модель примариев.";
+                return;
+            }
+
+            try {
+                profileText.textContent = "Загрузка ICC-профиля PSOcoated_v3.icc…";
+
+                const cmykProfile = new jsColorEngine.Profile();
+                // Важно: файл PSOcoated_v3.icc должен лежать рядом с index.html.
+                await cmykProfile.loadPromise("PSOcoated_v3.icc");
+
+                const transform = new jsColorEngine.Transform({
+                    dataFormat: "float",
+                    BPC: true,          // black point compensation
+                });
+
+                // CMYK-профиль → встроенный виртуальный *srgb
+                transform.create(cmykProfile, "*srgb", jsColorEngine.eIntent.relative);
+
+                cmykToRgbTransform = transform;
+                iccReady = true;
+
+                profileText.textContent = "Профиль: PSO Coated v3 → sRGB (Relative, BPC).";
+                // Перерисуем текущий цвет уже через ICC.
+                updateUI();
+            } catch (e) {
+                console.error("Ошибка инициализации ICC-профиля:", e);
+                const profileText = document.getElementById("profileText");
+                profileText.textContent = "Ошибка ICC-профиля. Используется модель примариев (приближённо).";
+                iccReady = false;
+            }
+        }
+
+        // --- UI-логика (ползунки и превью) ---
+
+        const cSlider = document.getElementById("cSlider");
+        const mSlider = document.getElementById("mSlider");
+        const ySlider = document.getElementById("ySlider");
+        const kSlider = document.getElementById("kSlider");
+
+        const cVal = document.getElementById("cVal");
+        const mVal = document.getElementById("mVal");
+        const yVal = document.getElementById("yVal");
+        const kVal = document.getElementById("kVal");
+
+        const cmykSwatch = document.getElementById("cmykSwatch");
+        const hexSwatch = document.getElementById("hexSwatch");
+        const cmykText = document.getElementById("cmykText");
+        const hexText = document.getElementById("hexText");
+        const tacText = document.getElementById("tacText");
+
+        const cupRect = document.getElementById("cupRect");
+        const cupPill = document.getElementById("cupPill");
+        const cupTag = document.getElementById("cupTag");
+
+        function getCurrentCmyk() {
+            return {
+                c: parseInt(cSlider.value, 10),
+                m: parseInt(mSlider.value, 10),
+                y: parseInt(ySlider.value, 10),
+                k: parseInt(kSlider.value, 10),
+            };
+        }
+
+        function updateUI() {
+            const { c, m, y, k } = getCurrentCmyk();
+
+            cVal.textContent = c;
+            mVal.textContent = m;
+            yVal.textContent = y;
+            kVal.textContent = k;
+
+            const tac = c + m + y + k;
+
+            // базовый цвет из ICC / модели
+            const baseRgb = cmykToRgbEngine(c, m, y, k);
+
+            // опускаем яркость на 13 единиц "как в Photoshop"
+            const rgb = applyPsBrightness(baseRgb, -13);
+
+            // всё остальное уже работает с "приглушённым" цветом
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+
+
+            cmykSwatch.style.backgroundColor = hex;
+            hexSwatch.style.backgroundColor = hex;
+
+            cmykText.textContent = `C ${c} / M ${m} / Y ${y} / K ${k}`;
+            tacText.textContent = `Общее покрытие: ${tac}%`;
+
+            hexText.textContent = hex;
+
+            cupRect.style.backgroundColor = hex;
+            cupPill.style.backgroundColor = hex;
+            cupTag.textContent = "CMYK";
+        }
+
+        [cSlider, mSlider, ySlider, kSlider].forEach((el) => {
+            el.addEventListener("input", updateUI);
+        });
+
+        // При первом открытии считаем цвет по fallback-модели,
+        // а ICC-профиль подгружаем асинхронно.
+        updateUI();
+        initICC();
+    </script>
+</body>
+</html>
