@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
@@ -81,7 +81,7 @@
         .slider-row {
             margin-bottom: 10px;
         }
-
+        
         .slider-label {
             display: flex;
             align-items: baseline;
@@ -369,6 +369,9 @@
                             <div class="swatch-label">CMYK (печать)</div>
                             <div class="swatch-box" id="cmykSwatch"></div>
                             <div class="swatch-text-main" id="cmykText">C 100 / M 0 / Y 0 / K 0</div>
+                            <div class="swatch-text-sub" id="profileText">
+                                Загрузка ICC-профиля PSOcoated_v3.icc…
+                            </div>
                             <div class="tiny" id="tacText">Общее покрытие: 100%</div>
                         </div>
 
@@ -376,7 +379,6 @@
                             <div class="swatch-label">HEX (экран)</div>
                             <div class="swatch-box" id="hexSwatch"></div>
                             <div class="swatch-text-main" id="hexText">#3CB2E6</div>
-
                         </div>
                     </div>
 
@@ -384,6 +386,12 @@
                         Важно: даже с ICC-профилем это только экранная имитация. На результат
                         влияют калибровка монитора, освещение, конкретная бумага и машина.
                     </div>
+                </div>
+
+                <div class="panel-small">
+                    Дополнительно учитывается, что бумага не идеально белая (≈4500K), а также
+                    виртуальная «яркость дисплея» — это помогает приблизить ощущение цвета
+                    к тому, как выглядит отпечаток на айфоне при уменьшенной яркости.
                 </div>
             </div>
         </div>
@@ -400,6 +408,17 @@
             K: "#626261", // Black
         };
 
+        // Тёплый белый бумаги ~4500K (подкорректируй под свой картон по фото / пипетке).
+        const PAPER_RGB = {
+            r: 238,
+            g: 238,
+            b: 255
+        };
+
+        // Коэффициент «виртуальной яркости дисплея».
+        // 1.0 — без изменения, 0.8 — как будто экран чуть притушили.
+        const DISPLAY_LUMINANCE_FACTOR = 0.8; // можешь играть 0.75–0.9 и подбирать на глаз
+
         function hexToRgb(hex) {
             const clean = hex.replace("#", "");
             const bigint = parseInt(clean, 16);
@@ -413,28 +432,26 @@
             const toHex = (v) => v.toString(16).padStart(2, "0").toUpperCase();
             return "#" + toHex(r) + toHex(g) + toHex(b);
         }
-        function applyPsBrightness(rgb, psBrightness) {
-            // psBrightness — значение как в Photoshop: от -150 до +150
-            // -13 означает лёгкое затемнение
-            var maxSlider = 150; // диапазон слайдера в Photoshop
-            var delta = psBrightness / maxSlider * 255; // переводим «деления» в уровни 0–255
 
-            var r = rgb.r + delta;
-            var g = rgb.g + delta;
-            var b = rgb.b + delta;
+        // Мягкое "имитируем уменьшение яркости дисплея"
+        function applyDisplayLuminance(rgb, factor) {
+            return {
+                r: Math.round(Math.min(255, Math.max(0, rgb.r * factor))),
+                g: Math.round(Math.min(255, Math.max(0, rgb.g * factor))),
+                b: Math.round(Math.min(255, Math.max(0, rgb.b * factor))),
+            };
+        }
 
-            // жёстко ограничиваем диапазон 0–255
-            if (r < 0) r = 0;
-            if (r > 255) r = 255;
-            if (g < 0) g = 0;
-            if (g > 255) g = 255;
-            if (b < 0) b = 0;
-            if (b > 255) b = 255;
+        // Учёт тёплого картона: белая точка не #FFFFFF, а PAPER_RGB
+        function applyPaperTint(rgb, paperRgb) {
+            const r = Math.round(rgb.r * paperRgb.r / 255);
+            const g = Math.round(rgb.g * paperRgb.g / 255);
+            const b = Math.round(rgb.b * paperRgb.b / 255);
 
             return {
-                r: Math.round(r),
-                g: Math.round(g),
-                b: Math.round(b)
+                r: Math.min(255, Math.max(0, r)),
+                g: Math.min(255, Math.max(0, g)),
+                b: Math.min(255, Math.max(0, b)),
             };
         }
 
@@ -527,12 +544,16 @@
             const profileText = document.getElementById("profileText");
 
             if (!window.jsColorEngine) {
-                profileText.textContent = "ICC-движок не найден (jsColorEngineWeb.js). Используется модель примариев.";
+                if (profileText) {
+                    profileText.textContent = "ICC-движок не найден (jsColorEngineWeb.js). Используется модель примариев.";
+                }
                 return;
             }
 
             try {
-                profileText.textContent = "Загрузка ICC-профиля PSOcoated_v3.icc…";
+                if (profileText) {
+                    profileText.textContent = "Загрузка ICC-профиля PSOcoated_v3.icc…";
+                }
 
                 const cmykProfile = new jsColorEngine.Profile();
                 // Важно: файл PSOcoated_v3.icc должен лежать рядом с index.html.
@@ -549,13 +570,17 @@
                 cmykToRgbTransform = transform;
                 iccReady = true;
 
-                profileText.textContent = "Профиль: PSO Coated v3 → sRGB (Relative, BPC).";
+                if (profileText) {
+                    profileText.textContent = "Профиль: PSO Coated v3 → sRGB (Relative, BPC).";
+                }
+
                 // Перерисуем текущий цвет уже через ICC.
                 updateUI();
             } catch (e) {
                 console.error("Ошибка инициализации ICC-профиля:", e);
-                const profileText = document.getElementById("profileText");
-                profileText.textContent = "Ошибка ICC-профиля. Используется модель примариев (приближённо).";
+                if (profileText) {
+                    profileText.textContent = "Ошибка ICC-профиля. Используется модель примариев (приближённо).";
+                }
                 iccReady = false;
             }
         }
@@ -578,10 +603,6 @@
         const hexText = document.getElementById("hexText");
         const tacText = document.getElementById("tacText");
 
-        const cupRect = document.getElementById("cupRect");
-        const cupPill = document.getElementById("cupPill");
-        const cupTag = document.getElementById("cupTag");
-
         function getCurrentCmyk() {
             return {
                 c: parseInt(cSlider.value, 10),
@@ -601,15 +622,17 @@
 
             const tac = c + m + y + k;
 
-            // базовый цвет из ICC / модели
+            // 1) базовый цвет из ICC / модели
             const baseRgb = cmykToRgbEngine(c, m, y, k);
 
-            // опускаем яркость на 13 единиц "как в Photoshop"
-            const rgb = applyPsBrightness(baseRgb, -13);
+            // 2) виртуальная яркость дисплея (имитация опущенного ползунка)
+            let rgb = applyDisplayLuminance(baseRgb, DISPLAY_LUMINANCE_FACTOR);
 
-            // всё остальное уже работает с "приглушённым" цветом
+            // 3) учёт тёплой бумаги (4500K)
+            rgb = applyPaperTint(rgb, PAPER_RGB);
+
+            // 4) в HEX для экрана
             const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
-
 
             cmykSwatch.style.backgroundColor = hex;
             hexSwatch.style.backgroundColor = hex;
@@ -618,10 +641,6 @@
             tacText.textContent = `Общее покрытие: ${tac}%`;
 
             hexText.textContent = hex;
-
-            cupRect.style.backgroundColor = hex;
-            cupPill.style.backgroundColor = hex;
-            cupTag.textContent = "CMYK";
         }
 
         [cSlider, mSlider, ySlider, kSlider].forEach((el) => {
