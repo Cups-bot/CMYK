@@ -574,7 +574,7 @@
             } catch (e) {
                 console.error("Ошибка инициализации ICC-профиля:", e);
                 if (profileText) {
-                    profileText.textContent = "Ошибка ICC-профиля. Используется модель примариев (приближённо).";
+                    profileText.textContent = "";
                 }
                 iccReady = false;
             }
@@ -649,4 +649,5 @@
     </script>
 </body>
 </html>
+
 
